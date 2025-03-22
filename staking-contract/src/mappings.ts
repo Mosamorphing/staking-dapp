@@ -1,3 +1,4 @@
+import { BigInt } from "@graphprotocol/graph-ts";
 import {
   Staked,
   Withdrawn,
@@ -5,14 +6,7 @@ import {
   RewardRateUpdated,
   EmergencyWithdrawn,
 } from "../generated/StakingContract/StakingContract";
-import {
-  User,
-  StakePosition,
-  Withdrawal,
-  Reward,
-  ProtocolMetrics,
-} from "../generated/schema";
-import { BigInt } from "@graphprotocol/graph-ts";
+import { User, StakePosition, Withdrawal, Reward, ProtocolMetrics } from "../generated/schema";
 
 // Helper function to load or create a User entity
 function getUser(id: string): User {
@@ -42,17 +36,19 @@ function getProtocolMetrics(): ProtocolMetrics {
 // Event: Staked
 export function handleStaked(event: Staked): void {
   let user = getUser(event.params.user.toHex());
-  let stake = new StakePosition(event.transaction.hash.toHex());
 
+  // Create a new StakePosition
+  let stake = new StakePosition(event.transaction.hash.toHex());
   stake.user = user.id;
   stake.amount = event.params.amount;
   stake.stakedAt = event.block.timestamp;
-  // stake.unlockTime = event.params.unlockTime;
   stake.save();
 
+  // Update the user's total staked amount
   user.totalStaked = user.totalStaked.plus(event.params.amount);
   user.save();
 
+  // Update ProtocolMetrics
   let metrics = getProtocolMetrics();
   metrics.totalStaked = metrics.totalStaked.plus(event.params.amount);
   metrics.lastUpdated = event.block.timestamp;
@@ -62,16 +58,19 @@ export function handleStaked(event: Staked): void {
 // Event: Withdrawn
 export function handleWithdrawn(event: Withdrawn): void {
   let user = getUser(event.params.user.toHex());
-  let withdrawal = new Withdrawal(event.transaction.hash.toHex());
 
+  // Create a new Withdrawal
+  let withdrawal = new Withdrawal(event.transaction.hash.toHex());
   withdrawal.user = user.id;
   withdrawal.amount = event.params.amount;
   withdrawal.withdrawnAt = event.block.timestamp;
   withdrawal.save();
 
+  // Update the user's total staked amount
   user.totalStaked = user.totalStaked.minus(event.params.amount);
   user.save();
 
+  // Update ProtocolMetrics
   let metrics = getProtocolMetrics();
   metrics.totalStaked = metrics.totalStaked.minus(event.params.amount);
   metrics.lastUpdated = event.block.timestamp;
@@ -81,13 +80,15 @@ export function handleWithdrawn(event: Withdrawn): void {
 // Event: RewardsClaimed
 export function handleRewardsClaimed(event: RewardsClaimed): void {
   let user = getUser(event.params.user.toHex());
-  let reward = new Reward(event.transaction.hash.toHex());
 
+  // Create a new Reward
+  let reward = new Reward(event.transaction.hash.toHex());
   reward.user = user.id;
   reward.amount = event.params.amount;
   reward.claimedAt = event.block.timestamp;
   reward.save();
 
+  // Update the user's total rewards
   user.totalRewards = user.totalRewards.plus(event.params.amount);
   user.save();
 }
@@ -103,16 +104,19 @@ export function handleRewardRateUpdated(event: RewardRateUpdated): void {
 // Event: EmergencyWithdrawn
 export function handleEmergencyWithdrawn(event: EmergencyWithdrawn): void {
   let user = getUser(event.params.user.toHex());
-  let withdrawal = new Withdrawal(event.transaction.hash.toHex());
 
+  // Create a new Withdrawal
+  let withdrawal = new Withdrawal(event.transaction.hash.toHex());
   withdrawal.user = user.id;
   withdrawal.amount = event.params.amount;
   withdrawal.withdrawnAt = event.block.timestamp;
   withdrawal.save();
 
+  // Update the user's total staked amount
   user.totalStaked = user.totalStaked.minus(event.params.amount);
   user.save();
 
+  // Update ProtocolMetrics
   let metrics = getProtocolMetrics();
   metrics.totalStaked = metrics.totalStaked.minus(event.params.amount);
   metrics.lastUpdated = event.block.timestamp;

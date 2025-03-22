@@ -1,6 +1,36 @@
-type ExampleEntity @entity {
-  id: Bytes!
-  count: BigInt!
-  user: Bytes! # address
-  amount: BigInt! # uint256
+type User @entity {
+  id: ID! # User address
+  stakes: [StakePosition!]! @derivedFrom(field: "user") # List of stakes by this user
+  withdrawals: [Withdrawal!]! @derivedFrom(field: "user") # List of withdrawals by this user
+  rewards: [Reward!]! @derivedFrom(field: "user") # List of rewards claimed by this user
+  totalStaked: BigInt! # Total amount staked by this user
+  totalRewards: BigInt! # Total rewards claimed by this user
+}
+
+type StakePosition @entity {
+  id: ID! # Unique ID for each stake
+  user: User! # The user who made this stake
+  amount: BigInt! # Amount staked
+  stakedAt: BigInt! # When the stake was made
+}
+
+type Withdrawal @entity {
+  id: ID! # Unique ID for each withdrawal
+  user: User! # The user who made this withdrawal
+  amount: BigInt! # Amount withdrawn
+  withdrawnAt: BigInt! # When the withdrawal was made
+}
+
+type Reward @entity {
+  id: ID! # Unique ID for each reward
+  user: User! # The user who claimed this reward
+  amount: BigInt! # Amount of reward claimed
+  claimedAt: BigInt! # When the reward was claimed
+}
+
+type ProtocolMetrics @entity {
+  id: ID! # Singleton entity (e.g., "global")
+  totalStaked: BigInt! # Total amount staked in the contract
+  currentRewardRate: BigInt! # Current reward rate
+  lastUpdated: BigInt! # Last time the metrics were updated
 }
